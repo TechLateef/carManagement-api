@@ -1,4 +1,3 @@
-//Unit test for authService for signUp and login methods
 import { AuthService } from "../../src/features/auth/service/auth.service";
 import { UsersService } from "../../src/features/user/service/user.service";
 import { CreateUserDto } from "../../src/features/auth/dto/createUser.dto";
@@ -41,13 +40,11 @@ describe("AuthService", () => {
                 phoneNumber: "1234567890",
             };
 
-            // Use 'any' for createdUser to avoid TS 'never' error
             const createdUser: any = { ...userDetails, _doc: userDetails, password: undefined };
 
             jest.spyOn(usersService, "findByEmail").mockResolvedValue(null);
             jest.spyOn(authService, "createAndSendToken").mockResolvedValue("mockToken");
 
-            // Mock Customer.create for discriminator usage
             const { Customer } = require("../../src/features/customer/model/customer.model");
             (Customer.create as jest.Mock<any>).mockResolvedValue(createdUser);
 
