@@ -33,8 +33,12 @@ export class UsersService {
      * @returns 
      */
     async findByEmail(email: string) {
-        return await BaseUser.findOne({ where: email })
+        // console.log("email", email)
+        const user = await BaseUser.findOne({ email }); // <-- Fix here
+        // console.log('User', user)
+        return user;
     }
+
 
 
     /**

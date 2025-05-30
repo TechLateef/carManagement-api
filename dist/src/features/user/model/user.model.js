@@ -12,7 +12,6 @@ const BaseUserSchema = new mongoose_1.Schema({
     phoneNumber: {
         type: String,
         required: [true, "Phone number is required"],
-        unique: true,
         trim: true,
         validate: {
             validator: function (v) {
@@ -32,8 +31,22 @@ const BaseUserSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "Password is required"],
         minlength: [8, "Password must be at least 8 characters long"],
+        // select: false, 
     },
 }, { discriminatorKey: "userType", timestamps: true });
+BaseUserSchema.pre("save", async function (next) {
+    if (!this.isModified("password"))
+        return next();
+    try {
+        // Hash the password before saving
+        const salt = await bcryptjs_1.default.genSalt(10);
+        this.password = await bcryptjs_1.default.hash(this.password, salt);
+    }
+    catch (error) {
+        next(error);
+    }
+    next();
+});
 // Method to compare passwords
 BaseUserSchema.methods.comparePassword = async function (candidatePassword) {
     return bcryptjs_1.default.compare(candidatePassword, this.password);

@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const encrypt_1 = require("../../../common/utils/encrypt");
+const customer_model_1 = require("../../customer/model/customer.model");
+const manager_model_1 = require("../../manager/model/manager.model");
 class AuthService {
     constructor(usersService) {
         this.usersService = usersService;
@@ -15,6 +17,7 @@ class AuthService {
                 httpOnly: true,
             });
             res.set("authorization", token);
+            user.password = undefined;
             return token;
         }
         catch (error) {
@@ -32,10 +35,24 @@ class AuthService {
         if (existingUser) {
             return res.status(400).json({ message: 'The provided email has already been taken.' });
         }
-        const newUser = await this.usersService.createUser({
-            ...details,
-            email: details.email.toLowerCase(),
-        });
+        let newUser;
+        if (details.userType === "Customer") {
+            newUser = await customer_model_1.Customer.create({
+                ...details,
+                email: details.email.toLowerCase(),
+                userType: "Customer"
+            });
+        }
+        else if (details.userType === "Manager") {
+            newUser = await manager_model_1.Manager.create({
+                ...details,
+                email: details.email.toLowerCase(),
+                userType: "Manager"
+            });
+        }
+        else {
+            return res.status(400).json({ message: 'Invalid user type.' });
+        }
         if (!newUser) {
             return res.status(500).json({ message: 'Something went wrong while creating the user.' });
         }

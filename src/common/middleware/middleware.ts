@@ -23,8 +23,7 @@ const authenticationMiddleware: RequestHandler = async (
     const authHeader = req.headers.authorization;
     let token: string | undefined;
 
-    if (authHeader?.startsWith("Bearer")) {
-      token = authHeader.split(" ")[1];
+    if (authHeader?.startsWith("Bearer ")) { 
     } else if (req.cookies?.jwt) {
       token = req.cookies.jwt;
     }
@@ -34,19 +33,23 @@ const authenticationMiddleware: RequestHandler = async (
       return;
     }
 
-    const JWT_SECRET = process.env.JWT_SECRET!;
-    const decoded: any = jwt.verify(token, JWT_SECRET);
+    try {
+      const JWT_SECRET = process.env.JWT_SECRET!;
+      const decoded: any = jwt.verify(token, JWT_SECRET);
 
-    const user = await BaseUser.findById(decoded.id);
+      const user = await BaseUser.findById(decoded.id);
 
-    if (!user) {
-      res.status(StatusCodes.UNAUTHORIZED).json({ message: "User not found" });
-      return;
+      if (!user) {
+        res.status(StatusCodes.UNAUTHORIZED).json({ message: "User not found" });
+        return;
+      }
+
+      req.user = user;
+      req.user!.password = "";
+      next();
+    } catch (jwtError) {
+      res.status(StatusCodes.UNAUTHORIZED).json({ message: "Invalid or malformed token", error: jwtError });
     }
-
-    req.user = user;
-    req.user!.password = "";
-    next();
   } catch (error) {
     res.status(StatusCodes.UNAUTHORIZED).json({ message: "Not Authorized", error: error });
   }
@@ -65,6 +68,8 @@ export const RateLimiter = rateLimit({
 const authorize = (...allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const userRole = req.user?.userType || '';
+
+    // console.log("User Role:", req.user);
     if (allowedRoles.includes(userRole)) {
       return next()
     }

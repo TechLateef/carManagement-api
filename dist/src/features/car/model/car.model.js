@@ -11,4 +11,7 @@ const carSchema = new mongoose_1.Schema({
     category: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Category', required: true },
     owner: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Customer', required: false }
 }, { timestamps: true });
+carSchema.statics.withCategory = function () {
+    return this.find().populate('category');
+};
 exports.Car = (0, mongoose_1.model)('Car', carSchema);

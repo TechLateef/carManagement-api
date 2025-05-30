@@ -20,7 +20,7 @@ const authController = new AuthController(authService)
  * @access public
  * @route POST /api/v1/auth/login
  */
-// authRouter.post("/login", authController.login);
+authRouter.post("/login", authController.login);
 
 
 /**
@@ -28,4 +28,4 @@ const authController = new AuthController(authService)
  * @access public
  * @route POST /api/v1/auth/signup
  */
-// authRouter.post("/signup", authController.signUp);
+authRouter.post("/signup", authController.signUp);

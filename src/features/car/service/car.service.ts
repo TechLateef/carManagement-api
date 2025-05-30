@@ -1,5 +1,7 @@
 import { Car } from '../model/car.model';
 import { CarQueryDto } from '../dto/car-query.dto';
+import { CreateCarDto } from '../dto/create-car.dto';
+import { UpdateCarDto } from '../dto/update-car.dto';
 
 interface CarFilters {
   brand?: string;
@@ -19,7 +21,7 @@ export class CarService {
      * @param data data to create a new car 
      * @returns 
      */
-    async createCar(data: any) {
+    async createCar(data: CreateCarDto) {
     const car = new Car(data);
     return await car.save();
   }
@@ -39,7 +41,7 @@ export class CarService {
    * @param data  data to update the car
    * @returns 
    */
-  async updateCar(carId: string, data: any) {
+  async updateCar(carId: string, data: UpdateCarDto) {
     return await Car.findByIdAndUpdate(carId, data, { new: true });
   }
 
@@ -59,9 +61,19 @@ export class CarService {
      */
   async getCars(filters: CarQueryDto) {
     const query: any = {};
-    if (filters.brand) query.brand = filters.brand;
-    if (filters.model) query.model = filters.model;
-    if (filters.available !== undefined) query.available 
+    if (filters.brand) {
+      query.brand = { $regex: new RegExp(`^${filters.brand}$`, 'i') };
+    }
+    if (filters.model) {
+      query.model = { $regex: new RegExp(`^${filters.model}$`, 'i') };
+    }
+    if (filters.available !== undefined) {
+      if (typeof filters.available === 'string') {
+        query.available = filters.available === 'true';
+      } else {
+        query.available = filters.available;
+      }
+    }
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
       query.price = {};
       if (filters.minPrice !== undefined) query.price.$gte = Number(filters.minPrice);
@@ -72,7 +84,11 @@ export class CarService {
     const limit = filters.limit ? Number(filters.limit) : 10;
     const skip = (page - 1) * limit;
 
-    const cars = await Car.find(query).skip(skip).limit(limit);
+    const cars = await Car.find(query)
+      .skip(skip)
+      .limit(limit)
+      .populate('category');
+
     const total = await Car.countDocuments(query);
 
     return {

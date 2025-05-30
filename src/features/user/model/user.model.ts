@@ -7,11 +7,10 @@ import { IBaseUser } from "../../../common/interfaces/baseUser.interface";
 
 const BaseUserSchema = new Schema<IBaseUser>(
   {
-     fullName: { type: String, required: true },
+    fullName: { type: String, required: true },
     phoneNumber: {
       type: String,
       required: [true, "Phone number is required"],
-      unique: true,
       trim: true,
       validate: {
         validator: function (v: string) {
@@ -32,12 +31,25 @@ const BaseUserSchema = new Schema<IBaseUser>(
       type: String,
       required: [true, "Password is required"],
       minlength: [8, "Password must be at least 8 characters long"],
+      // select: false, 
     },
    
   },
   { discriminatorKey: "userType", timestamps: true }
 );
 
+
+BaseUserSchema.pre<IBaseUser>("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  try {
+    // Hash the password before saving
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  } catch (error) {
+     next(error as import("mongoose").CallbackError);
+  }
+  next();
+});
 
 // Method to compare passwords
 BaseUserSchema.methods.comparePassword = async function (

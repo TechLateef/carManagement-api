@@ -11,4 +11,8 @@ const carSchema = new Schema<ICar>({
     owner: { type: Schema.Types.ObjectId, ref: 'Customer', required: false }
 }, { timestamps: true });
 
+carSchema.statics.withCategory = function() {
+    return this.find().populate('category');
+};
+
 export const Car = model<ICar>('Car', carSchema);

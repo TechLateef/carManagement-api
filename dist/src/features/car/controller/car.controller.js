@@ -1,6 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CarController = void 0;
+const http_status_codes_1 = require("http-status-codes");
+const mongoose_1 = __importDefault(require("mongoose"));
 class CarController {
     constructor(carService) {
         this.carService = carService;
@@ -14,7 +19,7 @@ class CarController {
         this.createCar = async (req, res, next) => {
             try {
                 const car = await this.carService.createCar(req.body);
-                res.status(201).json(car);
+                res.status(http_status_codes_1.StatusCodes.CREATED).json({ message: 'Car as been  created', car });
             }
             catch (error) {
                 next(error);
@@ -30,9 +35,12 @@ class CarController {
          */
         this.getCarById = async (req, res, next) => {
             try {
+                if (!mongoose_1.default.Types.ObjectId.isValid(req.params.id)) {
+                    return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: 'Invalid car ID format' });
+                }
                 const car = await this.carService.getCarById(req.params.id);
                 if (!car)
-                    return res.status(404).json({ message: 'Car not found' });
+                    return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ message: 'Car not found' });
                 res.json(car);
             }
             catch (error) {
@@ -49,10 +57,17 @@ class CarController {
          */
         this.updateCar = async (req, res, next) => {
             try {
+                if (!mongoose_1.default.Types.ObjectId.isValid(req.params.id)) {
+                    res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: 'Invalid car ID format' });
+                    return;
+                }
                 const car = await this.carService.updateCar(req.params.id, req.body);
-                if (!car)
-                    return res.status(404).json({ message: 'Car not found' });
-                res.json(car);
+                console.log(car);
+                if (!car) {
+                    res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ message: 'Car not found' });
+                    return;
+                }
+                res.status(http_status_codes_1.StatusCodes.OK).json(car);
             }
             catch (error) {
                 next(error);
@@ -68,10 +83,16 @@ class CarController {
          */
         this.deleteCar = async (req, res, next) => {
             try {
+                if (!mongoose_1.default.Types.ObjectId.isValid(req.params.id)) {
+                    res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ message: 'Invalid car ID format' });
+                    return;
+                }
                 const car = await this.carService.deleteCar(req.params.id);
-                if (!car)
-                    return res.status(404).json({ message: 'Car not found' });
-                res.status(204).send();
+                if (!car) {
+                    res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ message: 'Car not found' });
+                    return;
+                }
+                res.status(http_status_codes_1.StatusCodes.OK).json({ message: 'Car deleted successfully' });
             }
             catch (error) {
                 next(error);
@@ -88,7 +109,7 @@ class CarController {
             try {
                 const filters = req.query;
                 const result = await this.carService.getCars(filters);
-                res.json(result);
+                res.status(http_status_codes_1.StatusCodes.OK).json(result);
             }
             catch (error) {
                 next(error);

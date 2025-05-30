@@ -28,7 +28,10 @@ class UsersService {
      * @returns
      */
     async findByEmail(email) {
-        return await user_model_1.BaseUser.findOne({ where: email });
+        // console.log("email", email)
+        const user = await user_model_1.BaseUser.findOne({ email }); // <-- Fix here
+        // console.log('User', user)
+        return user;
     }
     /**
   * @description Updates the user's details with the provided userId

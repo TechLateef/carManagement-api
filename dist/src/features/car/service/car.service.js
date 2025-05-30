@@ -44,12 +44,20 @@ class CarService {
      */
     async getCars(filters) {
         const query = {};
-        if (filters.brand)
-            query.brand = filters.brand;
-        if (filters.model)
-            query.model = filters.model;
-        if (filters.available !== undefined)
-            query.available;
+        if (filters.brand) {
+            query.brand = { $regex: new RegExp(`^${filters.brand}$`, 'i') };
+        }
+        if (filters.model) {
+            query.model = { $regex: new RegExp(`^${filters.model}$`, 'i') };
+        }
+        if (filters.available !== undefined) {
+            if (typeof filters.available === 'string') {
+                query.available = filters.available === 'true';
+            }
+            else {
+                query.available = filters.available;
+            }
+        }
         if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
             query.price = {};
             if (filters.minPrice !== undefined)
@@ -60,7 +68,10 @@ class CarService {
         const page = filters.page ? Number(filters.page) : 1;
         const limit = filters.limit ? Number(filters.limit) : 10;
         const skip = (page - 1) * limit;
-        const cars = await car_model_1.Car.find(query).skip(skip).limit(limit);
+        const cars = await car_model_1.Car.find(query)
+            .skip(skip)
+            .limit(limit)
+            .populate('category');
         const total = await car_model_1.Car.countDocuments(query);
         return {
             data: cars,

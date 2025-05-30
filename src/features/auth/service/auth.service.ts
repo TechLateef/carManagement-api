@@ -1,8 +1,11 @@
 import { encrypt } from "../../../common/utils/encrypt";
+import { Customer } from "../../customer/model/customer.model";
+import { Manager } from "../../manager/model/manager.model";
 import { UsersService } from "../../user/service/user.service";
 import { CreateUserDto } from "../dto/createUser.dto";
 import { LoginDto } from "../dto/login.dto";
 import { Response } from "express";
+
 
 export class AuthService {
 
@@ -17,6 +20,7 @@ export class AuthService {
                 httpOnly: true,
             });
             res.set("authorization", token);
+            user.password = undefined; 
             return token;
         } catch (error) {
             throw new Error("Error creating and sending token: " + error);
@@ -30,25 +34,34 @@ export class AuthService {
      * @returns 
      */
 
-    async signUp(details: CreateUserDto, res: Response) {
+    async signUp(details: CreateUserDto , res: Response) {
         const existingUser = await this.usersService.findByEmail(details.email.toLowerCase());
-
         if (existingUser) {
             return res.status(400).json({ message: 'The provided email has already been taken.' });
         }
 
-
-        const newUser = await this.usersService.createUser({
-            ...details,
-            email: details.email.toLowerCase(),
-        });
+        let newUser;
+        if (details.userType === "Customer") {
+            newUser = await Customer.create({
+                ...details,
+                email: details.email.toLowerCase(),
+                userType: "Customer"
+            });
+        } else if (details.userType === "Manager") {
+            newUser = await Manager.create({
+                ...details,
+                email: details.email.toLowerCase(),
+                userType: "Manager"
+            });
+        } else {
+            return res.status(400).json({ message: 'Invalid user type.' });
+        }
 
         if (!newUser) {
             return res.status(500).json({ message: 'Something went wrong while creating the user.' });
         }
 
         const token = await this.createAndSendToken(newUser, res)
-
         return res.status(201).json({
             message: 'User created successfully',
             token,

@@ -48,8 +48,7 @@ const authenticationMiddleware = async (req, res, next) => {
             return next();
         const authHeader = req.headers.authorization;
         let token;
-        if (authHeader === null || authHeader === void 0 ? void 0 : authHeader.startsWith("Bearer")) {
-            token = authHeader.split(" ")[1];
+        if (authHeader === null || authHeader === void 0 ? void 0 : authHeader.startsWith("Bearer ")) {
         }
         else if ((_b = req.cookies) === null || _b === void 0 ? void 0 : _b.jwt) {
             token = req.cookies.jwt;
@@ -58,16 +57,21 @@ const authenticationMiddleware = async (req, res, next) => {
             res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ message: "Not Authorized" });
             return;
         }
-        const JWT_SECRET = process.env.JWT_SECRET;
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await user_model_1.BaseUser.findById(decoded.id);
-        if (!user) {
-            res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ message: "User not found" });
-            return;
+        try {
+            const JWT_SECRET = process.env.JWT_SECRET;
+            const decoded = jwt.verify(token, JWT_SECRET);
+            const user = await user_model_1.BaseUser.findById(decoded.id);
+            if (!user) {
+                res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ message: "User not found" });
+                return;
+            }
+            req.user = user;
+            req.user.password = "";
+            next();
         }
-        req.user = user;
-        req.user.password = "";
-        next();
+        catch (jwtError) {
+            res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ message: "Invalid or malformed token", error: jwtError });
+        }
     }
     catch (error) {
         res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ message: "Not Authorized", error: error });
@@ -86,6 +90,7 @@ const authorize = (...allowedRoles) => {
     return (req, res, next) => {
         var _a;
         const userRole = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.userType) || '';
+        // console.log("User Role:", req.user);
         if (allowedRoles.includes(userRole)) {
             return next();
         }

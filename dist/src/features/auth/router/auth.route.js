@@ -14,10 +14,10 @@ const authController = new auth_controller_1.AuthController(authService);
  * @access public
  * @route POST /api/v1/auth/login
  */
-// authRouter.post("/login", authController.login);
+exports.authRouter.post("/login", authController.login);
 /**
  * @description This route is used to register a new user
  * @access public
  * @route POST /api/v1/auth/signup
  */
-// authRouter.post("/signup", authController.signUp);
+exports.authRouter.post("/signup", authController.signUp);
