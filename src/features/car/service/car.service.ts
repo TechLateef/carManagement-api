@@ -16,14 +16,14 @@ interface CarFilters {
 export class CarService {
 
 
-    /**
-     * @description Create a new car
-     * @param data data to create a new car 
-     * @returns 
-     */
-    async createCar(data: CreateCarDto) {
-    const car = new Car(data);
-    return await car.save();
+  /**
+   * @description Create a new car
+   * @param data data to create a new car 
+   * @returns 
+   */
+  async createCar(data: CreateCarDto) {
+    const car = await Car.create(data);
+    return car;
   }
 
   /**
@@ -54,11 +54,11 @@ export class CarService {
     return await Car.findByIdAndDelete(carId);
   }
 
-    /**
-     * @description Get cars with filters and pagination
-     * @param filters Filters for the car search
-     * @returns 
-     */
+  /**
+   * @description Get cars with filters and pagination
+   * @param filters Filters for the car search
+   * @returns 
+   */
   async getCars(filters: CarQueryDto) {
     const query: any = {};
     if (filters.brand) {
